@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include "llist.h"
 
 #define NAL_MAX     4000000
 #define H264        96
@@ -66,8 +67,13 @@ typedef struct rtp_package {
     uint8_t *rtp_load;
 } rtp_t;
 
-int send_single_nal_to_rtp(int socket_to, rtp_t *prtp, const rtp_header_t *rtp_single_h, const uint8_t *pnal, size_t size);
+struct func_para {
+    uint8_t *send_buf;
+    size_t len_sendbuf;
+    linklist iplist;
+};
 
-int fus_nal_to_rtp();
+int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*deal_func)(void *p), void *deal_func_para);
+void add_client_to_list(linklist client_ip_list, char *ipaddr);
 
 #endif

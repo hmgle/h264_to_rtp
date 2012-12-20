@@ -20,13 +20,12 @@
     do { if (DEBUG_PRINT) fprintf(stderr, "-------%s: %d: %s():---" fmt "----\n", \
             __FILE__, __LINE__, __func__, ##__VA_ARGS__);} while (0)
 
-
 uint16_t DEST_PORT;
 linklist CLIENT_IP_LIST;
 uint8_t SENDBUFFER[SEND_BUF_SIZE];
 uint8_t nal_buf[NAL_BUF_SIZE];
 
-static void add_client_to_list(linklist client_ip_list, char *ipaddr)
+void add_client_to_list(linklist client_ip_list, char *ipaddr)
 {
     struct sockaddr_in server_c;
     pnode pnode_tmp;
@@ -89,7 +88,8 @@ static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, link
 } /* void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list) */
 
 
-static int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, linklist client_ip_list)
+// int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, linklist client_ip_list)
+int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*deal_func)(void *p), void *deal_func_para)
 {
     uint8_t *nalu_buf;
     nalu_buf = pstStream;
@@ -159,20 +159,18 @@ static int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, li
             /*
              * 3. 填充nal内容
              */
-    debug_print();
             memcpy(SENDBUFFER + 13, nalu_buf + 1, nalu_len - 1);    /* 不拷贝nalu头 */
 
             /*
              * 4. 发送打包好的rtp到客户端
              */
             len_sendbuf = 12 + nalu_len;
-            send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-    debug_print();
+            // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+            deal_func(deal_func_para);
         } else {    /* nalu_len > RTP_PAYLOAD_MAX_SIZE */
             /*
              * FU-A分割
              */
-    debug_print();
 
             /*
              * 1. 计算分割的个数
@@ -238,7 +236,8 @@ static int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, li
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + (RTP_PAYLOAD_MAX_SIZE - 1);  /* rtp头 + nalu头 + nalu内容 */
-                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    deal_func(deal_func_para);
 
                 } else if (fu_seq < fu_pack_num - 1) { /* 中间的FU-A */
                     /*
@@ -286,7 +285,8 @@ static int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, li
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + RTP_PAYLOAD_MAX_SIZE;
-                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    deal_func(deal_func_para);
 
                 } else { /* 最后一个FU-A */
                     /*
@@ -334,7 +334,8 @@ static int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, li
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + last_fu_pack_size;
-                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+                    deal_func(deal_func_para);
 
                 } /* else-if (fu_seq == 0) */
             } /* end of for (fu_seq = 0; fu_seq < fu_pack_num; fu_seq++) */
@@ -428,6 +429,14 @@ static int copy_nal_from_file(FILE *fp, uint8_t *buf, int *len)
     return *len;
 } /* static int copy_nal_from_file(FILE *fp, char *buf, int *len) */
 
+// void send_func(struct func_para *para);
+// void send_func(struct func_para *para)
+void send_func(void *p);
+void send_func(void *p)
+{
+    return;
+}
+
 int main(int argc, char **argv)
 {
     FILE *fp;
@@ -470,7 +479,12 @@ int main(int argc, char **argv)
         fwrite(nal_buf, len, 1, fp_test);
         debug_print();
 #endif
-        ret = h264naltortp_send(25, nal_buf, len, CLIENT_IP_LIST);
+        // ret = h264naltortp_send(25, nal_buf, len, CLIENT_IP_LIST);
+// static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list)
+            // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+        struct func_para para;
+// int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*deal_func)(void *p), void *deal_func_para)
+        ret = h264naltortp_send(25, nal_buf, len, send_func, &para);
         if (ret != -1)
             usleep(1000 * 20);
     }
