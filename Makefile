@@ -1,7 +1,8 @@
 CFLAGS = -Wall -O2
+LDFLAGS = -lpthread
 
 TARGET := send_h264file_rtp \
-		  test_tcp_send_nal \
+		  test_tcp_send_nal test_tcp_recv_nal \
 #	      test_rtp2h264 
 
 .PHONY : clean all
@@ -9,6 +10,8 @@ TARGET := send_h264file_rtp \
 all: $(TARGET)
 
 test_tcp_send_nal: test_tcp_send_nal.o
+
+test_tcp_recv_nal: test_tcp_recv_nal.o
 
 test_rtp2h264: test_rtp2h264.o
 
