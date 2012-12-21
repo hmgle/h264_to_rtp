@@ -55,8 +55,6 @@ void add_client_to_list(linklist client_ip_list, char *ipaddr)
     return;
 } /* static void add_client_to_list(linklist client_ip_list, char *ipaddr) */
 
-
-
 static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list)
 {
     int ret;

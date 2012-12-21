@@ -138,7 +138,6 @@ void decode_rtp2h264(uint8_t *rtp_buf, int len, FILE *savefp)
     return;
 }
 
-
 void *recv_fun(void *p);
 void *recv_fun(void *p)
 {
@@ -157,9 +156,8 @@ void *recv_fun(void *p)
             debug_print("client have closed");
             break;
         }
-        // fwrite(recv_buf, 1, ret, OUTPUT_FD);
         decode_rtp2h264(recv_buf, ret, OUTPUT_FD);
-        fprintf(stderr, "len is %d\n", ret);
+        // fprintf(stderr, "len is %d\n", ret);
     }
 
     return NULL;

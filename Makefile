@@ -3,7 +3,6 @@ LDFLAGS = -lpthread
 
 TARGET := send_h264file_rtp \
 		  test_tcp_send_nal test_tcp_recv_nal \
-#	      test_rtp2h264 
 
 .PHONY : clean all
 

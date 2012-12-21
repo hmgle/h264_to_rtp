@@ -164,11 +164,10 @@ static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, int 
     if (ret < 0) {
         debug_print("send fail");
     }
-    usleep(1000 * 10);
+    usleep(2);
 
     return;
 } /* void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list) */
-
 
 static int h264naltortp_send_tcp(int framerate, uint8_t *pstStream, int nalu_len, int sock_fd)
 {
