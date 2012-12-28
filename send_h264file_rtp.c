@@ -60,6 +60,10 @@ static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, link
     int ret;
     pnode pnode_tmp0;
     pnode_tmp0 = client_ip_list->next;
+
+    if (!pnode_tmp0)
+        return;
+
     while (pnode_tmp0) {
     debug_print("len is %d", len_sendbuf);
         // if ((ret = send(pnode_tmp0->node_info.socket_c, send_buf, len_sendbuf, MSG_DONTWAIT)) < 0) {
@@ -81,6 +85,7 @@ static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, link
         } /* if (send(pnode_tmp0->node_info.socket_c, SENDBUF, send_bytes, 0) == -1) */
         pnode_tmp0 = pnode_tmp0->next;
     } /* while (pnode_tmp0) */
+    usleep(1000 * 10);
 
     return;
 } /* void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list) */

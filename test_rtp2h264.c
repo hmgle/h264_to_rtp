@@ -9,7 +9,7 @@
 #endif
 #include "h264tortp.h"
 
-#define NAL_BUF_SIZE                1500 * 150
+#define NAL_BUF_SIZE                (1500 * 150)
 
 #define DEBUG_PRINT         0
 #define debug_print(fmt, ...) \
