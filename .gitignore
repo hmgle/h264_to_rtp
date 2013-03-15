@@ -1,3 +1,10 @@
 *.o
+*.log
+*.tmp
+*.h264
+test_decode_rtp2h264
+test_rtp2h264
+test_tcp_recv_nal
+test_tcp_send_nal
 send_h264file_rtp
 test_tcp_send_nal
