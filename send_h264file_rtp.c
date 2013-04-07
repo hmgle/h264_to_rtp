@@ -12,7 +12,7 @@
 #define DEFAULT_DEST_PORT           1234
 #define RTP_PAYLOAD_MAX_SIZE        1400
 #define SEND_BUF_SIZE               1500
-#define NAL_BUF_SIZE                (1500 * 100)
+#define NAL_BUF_SIZE                1500 * 50
 #define SSRC_NUM                    10
 
 #define DEBUG_PRINT         0
@@ -20,12 +20,13 @@
     do { if (DEBUG_PRINT) fprintf(stderr, "-------%s: %d: %s():---" fmt "----\n", \
             __FILE__, __LINE__, __func__, ##__VA_ARGS__);} while (0)
 
+
 uint16_t DEST_PORT;
 linklist CLIENT_IP_LIST;
 uint8_t SENDBUFFER[SEND_BUF_SIZE];
 uint8_t nal_buf[NAL_BUF_SIZE];
 
-void add_client_to_list(linklist client_ip_list, char *ipaddr)
+static void add_client_list(linklist client_ip_list, char *ipaddr)
 {
     struct sockaddr_in server_c;
     pnode pnode_tmp;
@@ -53,17 +54,15 @@ void add_client_to_list(linklist client_ip_list, char *ipaddr)
     }
 
     return;
-} /* static void add_client_to_list(linklist client_ip_list, char *ipaddr) */
+} /* static void add_client_list(linklist client_ip_list, char *ipaddr) */
+
+
 
 static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list)
 {
     int ret;
     pnode pnode_tmp0;
     pnode_tmp0 = client_ip_list->next;
-
-    if (!pnode_tmp0)
-        return;
-
     while (pnode_tmp0) {
     debug_print("len is %d", len_sendbuf);
         // if ((ret = send(pnode_tmp0->node_info.socket_c, send_buf, len_sendbuf, MSG_DONTWAIT)) < 0) {
@@ -85,14 +84,12 @@ static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, link
         } /* if (send(pnode_tmp0->node_info.socket_c, SENDBUF, send_bytes, 0) == -1) */
         pnode_tmp0 = pnode_tmp0->next;
     } /* while (pnode_tmp0) */
-    usleep(1000 * 10);
 
     return;
 } /* void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list) */
 
 
-// int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, linklist client_ip_list)
-int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*deal_func)(void *p), void *deal_func_para)
+static int h264nal2rtp_send(int framerate, uint8_t *pstStream, int nalu_len, linklist client_ip_list)
 {
     uint8_t *nalu_buf;
     nalu_buf = pstStream;
@@ -162,18 +159,20 @@ int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*de
             /*
              * 3. 填充nal内容
              */
+    debug_print();
             memcpy(SENDBUFFER + 13, nalu_buf + 1, nalu_len - 1);    /* 不拷贝nalu头 */
 
             /*
              * 4. 发送打包好的rtp到客户端
              */
             len_sendbuf = 12 + nalu_len;
-            // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-            deal_func(deal_func_para);
+            send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
+    debug_print();
         } else {    /* nalu_len > RTP_PAYLOAD_MAX_SIZE */
             /*
              * FU-A分割
              */
+    debug_print();
 
             /*
              * 1. 计算分割的个数
@@ -239,8 +238,7 @@ int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*de
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + (RTP_PAYLOAD_MAX_SIZE - 1);  /* rtp头 + nalu头 + nalu内容 */
-                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-                    deal_func(deal_func_para);
+                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
 
                 } else if (fu_seq < fu_pack_num - 1) { /* 中间的FU-A */
                     /*
@@ -288,8 +286,7 @@ int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*de
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + RTP_PAYLOAD_MAX_SIZE;
-                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-                    deal_func(deal_func_para);
+                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
 
                 } else { /* 最后一个FU-A */
                     /*
@@ -337,8 +334,7 @@ int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*de
                      * 4. 发送打包好的rtp包到客户端
                      */
                     len_sendbuf = 12 + 2 + last_fu_pack_size;
-                    // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-                    deal_func(deal_func_para);
+                    send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
 
                 } /* else-if (fu_seq == 0) */
             } /* end of for (fu_seq = 0; fu_seq < fu_pack_num; fu_seq++) */
@@ -432,14 +428,6 @@ static int copy_nal_from_file(FILE *fp, uint8_t *buf, int *len)
     return *len;
 } /* static int copy_nal_from_file(FILE *fp, char *buf, int *len) */
 
-// void send_func(struct func_para *para);
-// void send_func(struct func_para *para)
-void send_func(void *p);
-void send_func(void *p)
-{
-    return;
-}
-
 int main(int argc, char **argv)
 {
     FILE *fp;
@@ -470,7 +458,7 @@ int main(int argc, char **argv)
         DEST_PORT = DEFAULT_DEST_PORT;
 
     CLIENT_IP_LIST = create_null_list_link();
-    add_client_to_list(CLIENT_IP_LIST, argv[2]);
+    add_client_list(CLIENT_IP_LIST, argv[2]);
 
     fprintf(stderr, "DEST_PORT is %d\n", DEST_PORT);
     while (copy_nal_from_file(fp, nal_buf, &len) != -1) {
@@ -482,12 +470,7 @@ int main(int argc, char **argv)
         fwrite(nal_buf, len, 1, fp_test);
         debug_print();
 #endif
-        // ret = h264naltortp_send(25, nal_buf, len, CLIENT_IP_LIST);
-// static void send_data_to_client_list(uint8_t *send_buf, size_t len_sendbuf, linklist client_ip_list)
-            // send_data_to_client_list(SENDBUFFER, len_sendbuf, client_ip_list);
-        struct func_para para;
-// int h264naltortp_send(int framerate, uint8_t *pstStream, int nalu_len, void (*deal_func)(void *p), void *deal_func_para)
-        ret = h264naltortp_send(25, nal_buf, len, send_func, &para);
+        ret = h264nal2rtp_send(25, nal_buf, len, CLIENT_IP_LIST);
         if (ret != -1)
             usleep(1000 * 20);
     }
