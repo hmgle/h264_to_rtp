@@ -1,5 +1,5 @@
 CFLAGS = -Wall -O2
-LDFLAGS = -lpthread
+LDLIBS = -lpthread
 
 TARGET := send_h264file_rtp \
 		  test_tcp_send_nal test_tcp_recv_nal \
