@@ -2,6 +2,7 @@
 *.log
 *.tmp
 *.h264
+!record.h264
 test_decode_rtp2h264
 test_rtp2h264
 test_tcp_recv_nal
