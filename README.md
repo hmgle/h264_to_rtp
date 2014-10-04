@@ -5,7 +5,7 @@ send h264 file by rtp via udp
 
 test:
 
-```bash
+```console
 $ make
 $ make test
 
