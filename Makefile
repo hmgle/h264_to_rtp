@@ -27,7 +27,7 @@ llist_i386.o: llist.c
 	gcc -c $< -o $@ -Wall
 
 test: send_h264file_rtp
-	cvlc test.sdp &  # or mplayer(or vlc) test.sdp &
+	cvlc test.sdp &  # or mplayer(or ffplay) test.sdp &
 	sleep 0.2 && ./send_h264file_rtp record.h264 127.0.0.1 1234
 
 clean:
