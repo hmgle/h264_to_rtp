@@ -9,7 +9,7 @@ test:
 $ make
 $ make test
 
-$ # ffplay test.sdp &  # or mplayer(or vlc) test.sdp &
+$ # cvlc test.sdp &  # or mplayer(or ffplay) test.sdp &
 $ # ./send_h264file_rtp record.h264 127.0.0.1 1234
 ```
 
